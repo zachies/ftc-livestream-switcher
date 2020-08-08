@@ -993,3 +993,4 @@ dist/pyswitcher/tk/ttk/xpTheme.tcl
 dist/pyswitcher/websockets/speedups.cp38-win32.pyd
 pyswitcher.spec
 Main.spec
+dist/pyswitcher-windows.zip
