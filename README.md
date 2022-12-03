@@ -1,6 +1,9 @@
 # ftc-livestream-switcher
 This utility will connect to the FIRST Tech Challenge scoring software to receive the status of the competition, switch the active OBS scene to the appropriate field, and begin recording the match. Once the match is over, it will automatically end the recording. After the competition, the video files can be uploaded to YouTube relatively quickly when compared to manually splicing the livestream archive.
 
+## FTC Scoring Software Documentation
+http://localhost/swagger-docs/api.html
+
 ## Downloading
 Navigate to the releases section and click on the zip file appropriate for your system. If your operating system is not listed, download the source file.
 
