@@ -1,6 +1,8 @@
-from websocket import create_connection
+#!/usr/bin/env python
+
 from ScoringResponse import ScoringResponse
 from ScoringResponse import Payload
+import websockets
 import argparse
 import json
 import asyncio
@@ -20,105 +22,98 @@ parser.add_argument("-pw", "--pw",           metavar="obspw",       type=str, re
 # Parse the arguments from the command line.
 args = parser.parse_args()
 
-# Connect to the scoring socket.
-scoringuri = "ws://" + args.scoring + "/api/v2/stream/?code=" + args.code
-print("Connecting to the scoring software at %s" % scoringuri)
-try:
-    scoring = create_connection(scoringuri)
-except:
-    print("Could not connect to the scoring software. Verify the address and try again.")
-    raise SystemExit(0)
-
-print("Connected to the scoring software")
-
-# Declare the asyncio loop for interacting with OBS
-loop = asyncio.get_event_loop()
-
-# Create the OBS socket.
-if(args.pw):
-    obs = simpleobsws.obsws(host=args.obs, port=args.port,password=args.pw, loop=loop)
-else:
-    obs = simpleobsws.obsws(host=args.obs, port=args.port, loop=loop)
-
 # Main loop.
 async def run():
-    # Connect to the OBS socket.
-    try:
-        await obs.connect()
-    except:
-        print("Could not connect to OBS. Make sure you have the OBS websocket plugin installed and try again.")
-        raise SystemExit(0)
 
-    print("Connected to OBS.")
+    # Connect to the scoring socket.
+    scoringuri = "ws://" + args.scoring + "/api/v2/stream/?code=" + args.code
+    print("Connecting to the scoring software at %s" % scoringuri)
+    async with websockets.connect(scoringuri) as scoring:
+        print("Connected to the scoring software")
 
-    while True:
-        # Infinite loop waiting for WebSocket data, then modifies the OBS recording appropriately.
-        print("\nWaiting for next message...")
-        message = scoring.recv()
+        # Create the OBS socket.
+        if(args.pw):
+            obs = simpleobsws.obsws(host=args.obs, port=args.port,password=args.pw, loop=asyncio.get_event_loop())
+        else:
+            obs = simpleobsws.obsws(host=args.obs, port=args.port, loop=asyncio.get_event_loop())
 
-        # Update from the scoring socket received
-        print("Message received: " + message)
+        # Connect to the OBS socket.
+        try:
+            await obs.connect()
+        except:
+            print("Could not connect to OBS. Make sure you have the OBS websocket plugin installed and try again.")
+            raise SystemExit(0)
 
-        # Convert the string into a ScoringResponse object
-        d = json.loads(message)
-        d["payload"] = Payload(**d['payload'])
-        response = ScoringResponse(**d)
+        print("Connected to OBS.")
 
-        # Wait untul the next socket message depending on what the payload's message is.
+        while True:
+            # Infinite loop waiting for WebSocket data, then modifies the OBS recording appropriately.
+            print("\nWaiting for next message...")
+            message = await scoring.recv()
 
-        # Match load (not the official start of match, or match preview)
-        # Intended for the live audience
-        if(response.updateType == "MATCH_LOAD"):
-            print("Loading next match detected")
+            # Update from the scoring socket received
+            print("Message received: " + message)
 
-            # Set filename.
-            filename = "%YY-%MM-%DD " + args.code + " " + response.payload.shortName
-            print("  - Setting filename to " + filename)
-            data = {"filename-formatting": filename}
-            result = await obs.call("SetFilenameFormatting", data)
-            print("  - Result: " + str(result))
+            # Convert the string into a ScoringResponse object
+            d = json.loads(message)
+            d["payload"] = Payload(**d['payload'])
+            response = ScoringResponse(**d)
 
-            # Set the appropriate scene in OBS.
-            field = "Field " + str(response.payload.field)
-            print("  - Setting scene to " + field)
-            data = {"scene-name": field}
-            result = await obs.call("SetCurrentScene", data)
-            print("  - Result: " + str(result))
+            # Wait untul the next socket message depending on what the payload's message is.
 
-        # Match start (timer has begun)
-        if(response.updateType == "MATCH_START"):
-            # If the active match is not a test match, proceed.
-            if(response.payload.shortName[0] != 'T'):
-                print("Start of official match detected")
+            # Match load (not the official start of match, or match preview)
+            # Intended for the live audience
+            if(response.updateType == "MATCH_LOAD"):
+                print("Loading next match detected, skipping...")
 
-                # Set filename.
-                filename = "%YY-%MM-%DD " + args.code + " " + response.payload.shortName
-                print("  - Setting filename to " + filename)
-                data = {"filename-formatting": filename}
-                result = await obs.call("SetFilenameFormatting", data)
+                # # Set filename.
+                # filename = "%YY-%MM-%DD " + args.code + " " + response.payload.shortName
+                # print("  - Setting filename to " + filename)
+                # data = {"filename-formatting": filename}
+                # result = await obs.call("SetFilenameFormatting", data)
+                # print("  - Result: " + str(result))
+
+                # # Set the appropriate scene in OBS.
+                # field = "Field " + str(response.payload.field)
+                # print("  - Setting scene to " + field)
+                # data = {"scene-name": field}
+                # result = await obs.call("SetCurrentScene", data)
+                # print("  - Result: " + str(result))
+
+            # Match start (timer has begun)
+            if(response.updateType == "MATCH_START"):
+                # If the active match is not a test match, proceed.
+                if(response.payload.shortName[0] != 'T'):
+                    print("Start of official match detected")
+
+                    # Set filename.
+                    filename = "%YY-%MM-%DD " + args.code + " " + response.payload.shortName
+                    print("  - Setting filename to " + filename)
+                    data = {"filename-formatting": filename}
+                    result = await obs.call("SetFilenameFormatting", data)
+                    print("  - Result: " + str(result))
+
+                    # Set the appropriate scene in OBS.
+                    field = "Field " + str(response.payload.field)
+                    print("  - Setting scene to " + field)
+                    data = {"scene-name": field}
+                    result = await obs.call("SetCurrentScene", data)
+                    print("  - Result: " + str(result))
+
+                    # Start recording.
+                    print("  - Starting the recording (if not already started)")
+                    result = await obs.call("StartRecording")
+                    print("  - Result: " + str(result))
+                else:
+                    print("Test match detected; ignoring")
+                
+
+            # Match post or abort (match is over, grab the next couple of seconds.)
+            if(response.updateType == "MATCH_POST" or response.updateType == "MATCH_ABORT"):
+                print("End of official match detected")
+                time.sleep(5)
+                print("  - Stopping the recording")
+                result = await obs.call("StopRecording")
                 print("  - Result: " + str(result))
 
-                # Set the appropriate scene in OBS.
-                field = "Field " + str(response.payload.field)
-                print("  - Setting scene to " + field)
-                data = {"scene-name": field}
-                result = await obs.call("SetCurrentScene", data)
-                print("  - Result: " + str(result))
-
-                # Start recording.
-                print("  - Starting the recording (if not already started)")
-                result = await obs.call("StartRecording")
-                print("  - Result: " + str(result))
-            else:
-                print("Test match detected; ignoring")
-            
-
-        # Match post or abort (match is over, grab the next couple of seconds.)
-        if(response.updateType == "MATCH_POST" or response.updateType == "MATCH_ABORT"):
-            print("End of official match detected")
-            time.sleep(5)
-            print("  - Stopping the recording")
-            result = await obs.call("StopRecording")
-            print("  - Result: " + str(result))
-
-loop.run_until_complete(run())
+asyncio.run(run())

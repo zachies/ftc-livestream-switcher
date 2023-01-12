@@ -1,6 +1,9 @@
 # ftc-livestream-switcher
 This utility will connect to the FIRST Tech Challenge scoring software to receive the status of the competition, switch the active OBS scene to the appropriate field, and begin recording the match. Once the match is over, it will automatically end the recording. After the competition, the video files can be uploaded to YouTube relatively quickly when compared to manually splicing the livestream archive.
 
+## obswebsockets
+Newer versions of OBS with websockets plugin version >5.0 do not support renaming recording files, so this version still uses the older API version of obswebsockets. [This release of obswebsockets](https://github.com/obsproject/obs-websocket/releases/tag/4.9.1-compat) can be installed alongside the newer version.
+
 ## Downloading
 Navigate to the releases section and click on the zip file appropriate for your system. If your operating system is not listed, download the source file.
 
