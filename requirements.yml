@@ -13,6 +13,7 @@ dependencies:
   - charset-normalizer=3.3.0=pyhd8ed1ab_0
   - click=8.1.7=unix_pyh707e725_0
   - dash=2.13.0=pyhd8ed1ab_0
+  - dash-bootstrap-components=1.5.0=pyhd8ed1ab_0
   - dash-extensions=1.0.3=pyhd8ed1ab_0
   - editorconfig=0.12.3=pyhd8ed1ab_0
   - flask=2.3.3=pyhd8ed1ab_0

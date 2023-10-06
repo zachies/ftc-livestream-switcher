@@ -6,6 +6,7 @@ certifi==2023.7.22
 charset-normalizer @ file:///home/conda/feedstock_root/build_artifacts/charset-normalizer_1696431134479/work
 click @ file:///home/conda/feedstock_root/build_artifacts/click_1692311806742/work
 dash @ file:///home/conda/feedstock_root/build_artifacts/dash_1693295590146/work
+dash-bootstrap-components @ file:///home/conda/feedstock_root/build_artifacts/dash-bootstrap-components_1694086999250/work
 dash-extensions @ file:///home/conda/feedstock_root/build_artifacts/dash-extensions_1690841997453/work
 EditorConfig @ file:///home/conda/feedstock_root/build_artifacts/editorconfig_1636044710028/work
 Flask @ file:///home/conda/feedstock_root/build_artifacts/flask_1692686107036/work
