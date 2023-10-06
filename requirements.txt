@@ -8,6 +8,7 @@ click @ file:///home/conda/feedstock_root/build_artifacts/click_1692311806742/wo
 dash @ file:///home/conda/feedstock_root/build_artifacts/dash_1693295590146/work
 dash-bootstrap-components @ file:///home/conda/feedstock_root/build_artifacts/dash-bootstrap-components_1694086999250/work
 dash-extensions @ file:///home/conda/feedstock_root/build_artifacts/dash-extensions_1690841997453/work
+dataclass-wizard @ file:///home/conda/feedstock_root/build_artifacts/dataclass-wizard_1646743107783/work
 EditorConfig @ file:///home/conda/feedstock_root/build_artifacts/editorconfig_1636044710028/work
 Flask @ file:///home/conda/feedstock_root/build_artifacts/flask_1692686107036/work
 Flask-Caching @ file:///home/conda/feedstock_root/build_artifacts/flask-caching_1659219902730/work
