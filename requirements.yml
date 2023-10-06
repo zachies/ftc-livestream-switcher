@@ -1,0 +1,56 @@
+name: ftc-livestreaming
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - ansi2html=1.8.0=py311h267d04e_2
+  - blinker=1.6.2=pyhd8ed1ab_0
+  - brotli-python=1.1.0=py311ha891d26_1
+  - bzip2=1.0.8=h3422bc3_4
+  - ca-certificates=2023.7.22=hf0a4a13_0
+  - cachelib=0.10.2=pyhd8ed1ab_0
+  - certifi=2023.7.22=pyhd8ed1ab_0
+  - charset-normalizer=3.3.0=pyhd8ed1ab_0
+  - click=8.1.7=unix_pyh707e725_0
+  - dash=2.13.0=pyhd8ed1ab_0
+  - dash-extensions=1.0.3=pyhd8ed1ab_0
+  - editorconfig=0.12.3=pyhd8ed1ab_0
+  - flask=2.3.3=pyhd8ed1ab_0
+  - flask-caching=2.0.1=pyhd8ed1ab_0
+  - idna=3.4=pyhd8ed1ab_0
+  - importlib-metadata=6.8.0=pyha770c72_0
+  - itsdangerous=2.1.2=pyhd8ed1ab_0
+  - jinja2=3.1.2=pyhd8ed1ab_1
+  - jsbeautifier=1.14.9=pyhd8ed1ab_0
+  - libcxx=16.0.6=h4653b0c_0
+  - libexpat=2.5.0=hb7217d7_1
+  - libffi=3.4.2=h3422bc3_5
+  - libsqlite=3.43.0=hb31c410_0
+  - libzlib=1.2.13=h53f4e23_5
+  - markupsafe=2.1.3=py311heffc1b2_1
+  - more-itertools=8.14.0=pyhd8ed1ab_0
+  - ncurses=6.4=h7ea286d_0
+  - nest-asyncio=1.5.6=pyhd8ed1ab_0
+  - openssl=3.1.3=h53f4e23_0
+  - packaging=23.2=pyhd8ed1ab_0
+  - pip=23.2.1=pyhd8ed1ab_0
+  - plotly=5.17.0=pyhd8ed1ab_0
+  - pysocks=1.7.1=pyha2e5f31_6
+  - python=3.11.6=h47c9636_0_cpython
+  - python_abi=3.11=4_cp311
+  - readline=8.2=h92ec313_1
+  - requests=2.31.0=pyhd8ed1ab_0
+  - retrying=1.3.3=py_2
+  - setuptools=68.2.2=pyhd8ed1ab_0
+  - six=1.16.0=pyh6c4a22f_0
+  - tenacity=8.2.3=pyhd8ed1ab_0
+  - tk=8.6.13=hb31c410_0
+  - typing-extensions=4.8.0=hd8ed1ab_0
+  - typing_extensions=4.8.0=pyha770c72_0
+  - tzdata=2023c=h71feb2d_0
+  - urllib3=2.0.6=pyhd8ed1ab_0
+  - werkzeug=3.0.0=pyhd8ed1ab_0
+  - wheel=0.41.2=pyhd8ed1ab_0
+  - xz=5.2.6=h57fd34a_0
+  - zipp=3.17.0=pyhd8ed1ab_0
+prefix: /Users/zach/miniconda3/envs/ftc-livestreaming
