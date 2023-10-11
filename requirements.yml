@@ -16,6 +16,8 @@ dependencies:
   - dash-bootstrap-components=1.5.0=pyhd8ed1ab_0
   - dash-extensions=1.0.3=pyhd8ed1ab_0
   - dataclass-wizard=0.22.0=pyhd8ed1ab_0
+  - dill=0.3.7=pyhd8ed1ab_0
+  - diskcache=5.6.3=pyhd8ed1ab_0
   - editorconfig=0.12.3=pyhd8ed1ab_0
   - flask=2.3.3=pyhd8ed1ab_0
   - flask-caching=2.0.1=pyhd8ed1ab_0
@@ -31,12 +33,14 @@ dependencies:
   - libzlib=1.2.13=h53f4e23_5
   - markupsafe=2.1.3=py311heffc1b2_1
   - more-itertools=8.14.0=pyhd8ed1ab_0
+  - multiprocess=0.70.15=py311heffc1b2_1
   - ncurses=6.4=h7ea286d_0
   - nest-asyncio=1.5.6=pyhd8ed1ab_0
   - openssl=3.1.3=h53f4e23_0
   - packaging=23.2=pyhd8ed1ab_0
   - pip=23.2.1=pyhd8ed1ab_0
   - plotly=5.17.0=pyhd8ed1ab_0
+  - psutil=5.9.5=py311heffc1b2_1
   - pysocks=1.7.1=pyha2e5f31_6
   - python=3.11.6=h47c9636_0_cpython
   - python_abi=3.11=4_cp311
@@ -57,5 +61,6 @@ dependencies:
   - zipp=3.17.0=pyhd8ed1ab_0
   - pip:
       - obsws-python==1.6.1
+      - pyatemmax==1.0b9
       - websocket-client==1.6.4
 prefix: /Users/zach/miniconda3/envs/ftc-livestreaming

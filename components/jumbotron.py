@@ -9,7 +9,6 @@ def get_jumbotron():
                 "This tool configures livestreaming for Arizona FIRST Tech Challenge events.",
                 className="lead",
             ),
-            html.Hr(className="my-2")
         ],
         className="py-3"
     )

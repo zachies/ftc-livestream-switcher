@@ -1,6 +1,8 @@
 import dash_bootstrap_components as dbc
-from dash_extensions.enrich import DashProxy, html, dcc, callback, Input, Output, State, no_update, MATCH
+from dash_extensions.enrich import DashProxy, NoOutputTransform, html, dcc, callback, Input, Output, State, no_update, MATCH, ALL
 from dash_extensions import WebSocket
+
+from dash import DiskcacheManager
 
 import requests, json
 
@@ -8,16 +10,57 @@ import components
 
 import obsws_python as obs
 
-app = DashProxy(__name__, external_stylesheets=[dbc.themes.DARKLY])
+import PyATEMMax
+import socket
+
+import diskcache
+
+import time
+from datetime import datetime
+
+cache = diskcache.Cache("./cache")
+background_callback_manager = DiskcacheManager(cache)
+
+app = DashProxy(__name__, external_stylesheets=[dbc.themes.DARKLY], background_callback_manager=background_callback_manager, transforms=[NoOutputTransform()])
 application = app.server
 
 app.layout = dbc.Container(
     [
+        # jumbotron
         dbc.Row(
-            dbc.Col(
-                components.Jumbotron()
-            )
+            [
+                dbc.Col(
+                    components.Jumbotron(),
+                    width=12
+                ),
+                dbc.Col(
+                    [
+                        html.P("Scorekeeping State", className="text-center"),
+                        html.Div(
+                            html.Div("Waiting..."),
+                            id="header-scorekeeping-state",
+                            className="text-center text-muted"),
+                    ],
+                    width=4
+                ),
+                dbc.Col(
+                    [
+                        html.P("OBS State", className="text-center"),
+                        html.Div("Waiting...", id="header-obs-state", className="text-center text-muted"),
+                    ],
+                    width=4
+                ),
+                dbc.Col(
+                    [
+                        html.P("ATEM State", className="text-center"),
+                        html.Div("Waiting...", id="header-atem-state", className="text-center text-muted"),
+                    ],
+                    width=4
+                ),
+                html.Hr(className="my-5")
+            ]
         ),
+        # scorekeeping row
         dbc.Row(
             dbc.Col(
                 [
@@ -61,6 +104,7 @@ app.layout = dbc.Container(
                 ]
             )
         ),
+        # obs row
         dbc.Row(
             dbc.Col(
                 [
@@ -107,14 +151,79 @@ app.layout = dbc.Container(
                     html.Div(
                         [
                             dbc.Label("OBS Websocket"),
-                            dcc.Store(id="obs-ws-store", data=None),
                             html.Div(id="obs-ws-status")
                         ],
                         className="mb-3"
                     ),
                 ]
             )
-        )
+        ),
+        # atem mini row
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        html.H2("ATEM Mini Pro"),
+                        html.Div(
+                            [
+                                dbc.Label("ATEM Address"),
+                                dbc.InputGroup(
+                                    [
+                                        dbc.Button("Scan", id="atem-address-btn"),
+                                        dbc.Select(id="atem-address-select", disabled=True),
+                                    ]
+                                ),
+                                html.Div(id="atem-address-scanning"),
+                                html.Div(id="atem-address-status")
+                            ],
+                            className="mb-3"
+                        ),
+                    ],
+                    width=12
+                ),
+
+                dbc.Col(
+                    [
+                        html.Div(
+                            [
+                                dbc.Label("Field 1 Video Source"),
+                                dbc.InputGroup(
+                                    [
+                                        dbc.Select(id="atem-field-1-select", options=[
+                                            {"label": i, "value": i} for i in range(1, 5)
+                                        ]),
+                                    ]
+                                )
+                            ],
+                            
+                        ),
+                    ],
+                    class_name="mb-3",
+                    width=6
+                ),
+                dbc.Col(
+                    [
+                        html.Div(
+                            [
+                                dbc.Label("Field 2 Video Source"),
+                                dbc.InputGroup(
+                                    [
+                                        dbc.Select(id="atem-field-2-select", options=[
+                                            {"label": i, "value": i} for i in range(1, 5)
+                                        ]),
+                                    ]
+                                )
+                            ],
+                            
+                        ),
+                    ],
+                    class_name="mb-3",
+                    width=6
+                )
+            ]
+        ),
+        # padding
+        html.Div(className="mb-5")
     ]
 )
 
@@ -168,23 +277,26 @@ def on_scorekeeping_ws_msg(message):
     if message['data'] == 'pong':
         return no_update  # keepalive sent by server
 
-    return str(message['data']), json.loads(message['data'])['updateType']
+    return str(message['data']), json.loads(message['data'])
 
 
 @callback(
-    Output({"type": "scorekeeping-interval", "index": MATCH}, "interval"),
-    Input({"type": "scorekeeping-state", "index": MATCH}, "data"),
+    Output("header-scorekeeping-state", "children"),
+    Input({"type": "scorekeeping-state", "index": ALL}, "data"),
     [State("scorekeeping-address-input", "value"), State("scorekeeping-events-select", "value")]
 )
 def on_scorekeeping_state_change(state, address, event):
-    if state is None:
+    if not any(state):
         return no_update
     
     # get upcoming match
     next_match = json.loads(
         requests.get(f"http://{address}/api/v1/events/{event}/matches/active/").text
     )
-    
+
+    state = state[0]
+
+    return html.Div([f"Update Type: {state['updateType']}", html.Br(), f"Match Number: {state['payload']['shortName']}", html.Br(), f"Field: {state['payload']['field']}"])
 
     if state == "MATCH_START":
         # cancel interval
@@ -197,6 +309,75 @@ def on_scorekeeping_state_change(state, address, event):
         # enable interval
         pass
 
+
+@callback(
+    Output("header-obs-state", "children"),
+    Input({"type": "scorekeeping-state", "index": ALL}, "data"),
+    [State("obs-address-input", "value"), State("obs-port-input", "value"), State("obs-password-input", "value"), State("scorekeeping-events-select", "value")]
+)
+def on_scorekeeping_state_change_obs(state, address, port, pw, event):
+    if not any(state) or address is None:
+        return no_update
+    state = state[0]
+
+    try:
+        # client is not serializable, so needs to be created each time we interact with OBS
+        client = obs.ReqClient(host=address, port=port, password=pw)
+    except Exception as e:
+        return [html.Div(f"Could not connect to OBS", className="text-warning")]
+
+    if state['updateType'] == "MATCH_START":
+        # stop recording
+        if client.get_record_status().output_active == True:
+            client.stop_record()
+        # set filename
+        filename = f"{event}_{state['payload']['shortName']}_{datetime.now().strftime('%Y_%m_%d_%H_%M_%S')}"
+        client.set_profile_parameter("Output", "FilenameFormatting", filename)
+        # start recording
+        client.start_record()
+        return [html.Div("Started recording")]
+    elif state['updateType'] == "MATCH_ABORT" or state['updateType'] == "MATCH_POST":
+        time.sleep(10)
+        if client.get_record_status().output_active == True:
+            client.stop_record()
+        return [html.Div("Stopped recording")]
+
+
+
+@callback(
+    Output("header-atem-state", "children"),
+    Input({"type": "scorekeeping-state", "index": ALL}, "data"),
+    [State("atem-address-select", "value"), State("atem-field-1-select", "value"), State("atem-field-2-select", "value")]
+)
+def on_scorekeeping_state_change_atem(state, address, field_1, field_2):
+    if not any(state) or address is None:
+        return no_update
+    state = state[0]
+    field = state['payload']['field']
+
+    if address is None:
+        return html.Div("No ATEM Mini Pro is selected.", className="text-warning")
+    
+    if (field == 1 and field_1 is None) or (field == 2 and field_2 is None):
+        return html.Div(f"No video source is selected for field {field}", className="text-warning")
+
+    field_map = {
+        1: field_1,
+        2: field_2
+    }
+
+    if state['updateType'] == "SHOW_PREVIEW":
+        # switch fields
+        switcher = PyATEMMax.ATEMMax()
+        switcher.connect(address)
+        if not switcher.waitForConnection(infinite=False, timeout=2):
+            switcher.disconnect()
+            return html.Div("Could not connect to ATEM Mini Pro at selected address!", className="text-danger")
+        switcher.setProgramInputVideoSource(PyATEMMax.ATEMMixEffects.mixEffect1, int(field_map[field]))
+        switcher.disconnect()
+        return html.Div(f"Set input video source to {int(field_map[field])}")
+    
+    return no_update
 
 
 @callback(
@@ -214,6 +395,43 @@ def on_obs_conn_input_change(address, port, pw):
         return [html.P(f"Could not connect to OBS. Exception: {e!r}", className="text-danger")]
     
     return [html.P(f"Connected to OBS.", className="text-success")]
+
+
+@callback(
+    [Output("atem-address-select", "options"), Output("atem-address-select", "disabled"), Output("atem-address-status", "children")],
+    Input("atem-address-btn", "n_clicks"),
+    prevent_initial_call=True,
+    background=True,
+    running=[
+        (Output("atem-address-scanning", "children"), [dbc.FormText("Scanning...", class_name="text-muted")], []),
+    ],
+)
+def on_atem_refresh_click(n_clicks):
+    hostname = socket.gethostname()
+    ip_addr = socket.gethostbyname(hostname)
+
+    # assumes a netmask of 255.255.255.0
+    ip_base = '.'.join(ip_addr.split('.')[0:3])
+
+    switcher = PyATEMMax.ATEMMax()
+    matches = []
+    for i in range(1, 255):
+        ip = f"{ip_base}.{i}"
+        print(f"Testing {ip}")
+        switcher.ping(ip, timeout=0.1)
+        if switcher.waitForConnection():
+            matches.append({"label": ip, "value": ip})
+        switcher.disconnect()
+
+    matches_found = len(matches) != 0
+    if not matches_found:
+        matches_text = f"No ATEM Mini Pros found after scanning from {ip_base}.1 to {ip_base}.255."
+        class_name = "text-danger"
+    else:
+        matches_text = f"Found {len(matches)} ATEM Mini Pros."
+        class_name = "text-muted"
+
+    return matches, not matches_found, [dbc.FormText(matches_text, class_name=class_name)]
 
 
 if __name__ == '__main__':
