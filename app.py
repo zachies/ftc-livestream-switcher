@@ -6,6 +6,8 @@ import requests, json
 
 import components
 
+import obsws_python as obs
+
 app = DashProxy(__name__, external_stylesheets=[dbc.themes.DARKLY])
 application = app.server
 
@@ -19,6 +21,7 @@ app.layout = dbc.Container(
         dbc.Row(
             dbc.Col(
                 [
+                    html.H2("Scorekeeping Software"),
                     html.Div(
                         [
                             dbc.Label("Scorekeeping Address"),
@@ -35,7 +38,7 @@ app.layout = dbc.Container(
                     
                     html.Div(
                         [
-                            dbc.Label("Events"),
+                            dbc.Label("Scorekeeping Events"),
                             dbc.InputGroup(
                                 [
                                     dbc.Select(id="scorekeeping-events-select"),
@@ -49,10 +52,66 @@ app.layout = dbc.Container(
                     html.Div(
                         [
                             dbc.Label("Scorekeeping Websocket"),
-                            html.Div(id="scorekeeping-ws-container")
+                            html.Div([
+                                html.P("Waiting for a message...", className="text-muted"),
+                            ],id="scorekeeping-ws-container")
                         ],
                         className="mb-3"
                     )
+                ]
+            )
+        ),
+        dbc.Row(
+            dbc.Col(
+                [
+                    html.H2("OBS"),
+                    html.Div(
+                        [
+                            dbc.Label("OBS Websocket Address"),
+                            dbc.InputGroup(
+                                [
+                                    dbc.Input(id="obs-address-input", debounce=True),
+                                ]
+                            ),
+                            dbc.FormText("", id="obs-address-error"),
+                        ],
+                        className="mb-3"
+                    ),
+
+                    html.Div(
+                        [
+                            dbc.Label("OBS Websocket Port"),
+                            dbc.InputGroup(
+                                [
+                                    dbc.Input(id="obs-port-input", debounce=True, type="number"),
+                                ]
+                            ),
+                            dbc.FormText("", id="obs-port-error"),
+                        ],
+                        className="mb-3"
+                    ),
+
+                    html.Div(
+                        [
+                            dbc.Label("OBS Websocket Password"),
+                            dbc.InputGroup(
+                                [
+                                    dbc.Input(id="obs-password-input", debounce=True, type="password"),
+                                ]
+                            ),
+                            dbc.FormText("", id="obs-password-error"),
+                        ],
+                        className="mb-3"
+                    ),
+
+                    html.Div(
+                        [
+                            dbc.Label("OBS Websocket"),
+                            dcc.Store(id="obs-ws-store", data=None),
+                            html.Div(id="obs-ws-status")
+                        ],
+                        className="mb-3"
+                    ),
                 ]
             )
         )
@@ -92,12 +151,14 @@ def on_scorekeeping_event_select(event, address):
     url = f"ws://{address}/api/v2/stream/?code={event}"
     return [
         html.P("Waiting for a message...", id={"type": "scorekeeping-ws-msg", "index": url}, className="text-muted"),
-        WebSocket(id={"type": "scorekeeping-ws", "index": url}, url=url)
+        WebSocket(id={"type": "scorekeeping-ws", "index": url}, url=url),
+        dcc.Store(id={"type": "scorekeeping-state", "index": url}),
+        dcc.Interval(id={"type": "scorekeeping-interval", "index": url}, interval=15000, max_intervals=-1, disabled=True)
     ]
 
 
 @callback(
-    Output({"type": "scorekeeping-ws-msg", "index": MATCH}, "children"),
+    [Output({"type": "scorekeeping-ws-msg", "index": MATCH}, "children"), Output({"type": "scorekeeping-state", "index": MATCH}, "data")],
     Input({"type": "scorekeeping-ws", "index": MATCH}, "message"),
 )
 def on_scorekeeping_ws_msg(message):
@@ -107,7 +168,52 @@ def on_scorekeeping_ws_msg(message):
     if message['data'] == 'pong':
         return no_update  # keepalive sent by server
 
-    return str(message['data'])
+    return str(message['data']), json.loads(message['data'])['updateType']
+
+
+@callback(
+    Output({"type": "scorekeeping-interval", "index": MATCH}, "interval"),
+    Input({"type": "scorekeeping-state", "index": MATCH}, "data"),
+    [State("scorekeeping-address-input", "value"), State("scorekeeping-events-select", "value")]
+)
+def on_scorekeeping_state_change(state, address, event):
+    if state is None:
+        return no_update
+    
+    # get upcoming match
+    next_match = json.loads(
+        requests.get(f"http://{address}/api/v1/events/{event}/matches/active/").text
+    )
+    
+
+    if state == "MATCH_START":
+        # cancel interval
+        # stop recording
+        # switch fields
+        # set filename
+        # start recording
+        pass
+    elif state == "MATCH_ABORT" or state == "MATCH_POST":
+        # enable interval
+        pass
+
+
+
+@callback(
+    Output("obs-ws-status", "children"),
+    [Input("obs-address-input", "value"), Input("obs-port-input", "value"), Input("obs-password-input", "value")]
+)
+def on_obs_conn_input_change(address, port, pw):
+    if address is None or port is None:
+        return [html.P("Waiting for a connection...", className="text-muted")]
+    
+    try:
+        # client is not serializable, so needs to be created each time we interact with OBS
+        obs.ReqClient(host=address, port=port, password=pw)
+    except Exception as e:
+        return [html.P(f"Could not connect to OBS. Exception: {e!r}", className="text-danger")]
+    
+    return [html.P(f"Connected to OBS.", className="text-success")]
 
 
 if __name__ == '__main__':

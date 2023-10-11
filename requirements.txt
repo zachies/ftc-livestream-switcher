@@ -20,6 +20,7 @@ jsbeautifier @ file:///home/conda/feedstock_root/build_artifacts/jsbeautifier_16
 MarkupSafe @ file:///Users/runner/miniforge3/conda-bld/markupsafe_1695367660391/work
 more-itertools @ file:///home/conda/feedstock_root/build_artifacts/more-itertools_1660060161633/work
 nest-asyncio @ file:///home/conda/feedstock_root/build_artifacts/nest-asyncio_1664684991461/work
+obsws-python==1.6.1
 packaging @ file:///home/conda/feedstock_root/build_artifacts/packaging_1696202382185/work
 plotly @ file:///home/conda/feedstock_root/build_artifacts/plotly_1694802097009/work
 PySocks @ file:///home/conda/feedstock_root/build_artifacts/pysocks_1661604839144/work
@@ -29,5 +30,6 @@ six @ file:///home/conda/feedstock_root/build_artifacts/six_1620240208055/work
 tenacity @ file:///home/conda/feedstock_root/build_artifacts/tenacity_1692026804430/work
 typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/typing_extensions_1695040754690/work
 urllib3 @ file:///home/conda/feedstock_root/build_artifacts/urllib3_1696434355823/work
+websocket-client==1.6.4
 Werkzeug @ file:///home/conda/feedstock_root/build_artifacts/werkzeug_1696278461996/work
 zipp @ file:///home/conda/feedstock_root/build_artifacts/zipp_1695255097490/work
