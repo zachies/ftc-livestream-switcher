@@ -373,9 +373,12 @@ def on_scorekeeping_state_change_atem(state, address, field_1, field_2):
         if not switcher.waitForConnection(infinite=False, timeout=2):
             switcher.disconnect()
             return html.Div("Could not connect to ATEM Mini Pro at selected address!", className="text-danger")
-        switcher.setProgramInputVideoSource(PyATEMMax.ATEMMixEffects.mixEffect1, int(field_map[field]))
-        switcher.disconnect()
-        return html.Div(f"Set input video source to {int(field_map[field])}")
+        if field not in field_map:
+            return html.Div(f"Could not find field {field} in mapping! Not performing a switch.", className="text-warning")
+        else:
+            switcher.setProgramInputVideoSource(PyATEMMax.ATEMMixEffects.mixEffect1, int(field_map[field]))
+            switcher.disconnect()
+            return html.Div(f"Set input video source to {int(field_map[field])}")
     
     return no_update
 
