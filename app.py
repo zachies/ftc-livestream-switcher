@@ -336,7 +336,7 @@ def on_scorekeeping_state_change_obs(state, address, port, pw, event):
         # start recording
         client.start_record()
         return [html.Div("Started recording")]
-    elif state['updateType'] == "MATCH_ABORT" or state['updateType'] == "MATCH_POST":
+    elif state['updateType'] == "MATCH_ABORT" or state['updateType'] == "MATCH_POST" or state['updateType'] == "MATCH_COMMIT":
         time.sleep(10)
         if client.get_record_status().output_active == True:
             client.stop_record()
